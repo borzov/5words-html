@@ -112,10 +112,10 @@
 
             function findWords(known, unknown, excluded) {
                 console.log('Начало поиска слов');
-                const pattern = generatePattern(known);
+                const pattern = generatePattern(known || '_____');
                 console.log('Шаблон:', pattern);
 
-                let filteredWords = filterWordsByPattern(pattern);
+                let filteredWords = filterWordsByPattern(words, pattern);
                 console.log('После фильтра по шаблону:', filteredWords);
 
                 if (unknown) {
@@ -135,7 +135,7 @@
                 return known.replace(/_/g, '.');
             }
 
-            function filterWordsByPattern(pattern) {
+            function filterWordsByPattern(words, pattern) {
                 const regex = new RegExp(`^${pattern}$`);
                 return words.filter(word => regex.test(word));
             }
