@@ -63,18 +63,23 @@
         });
 
         function findWords(words, known = '', unknown = '', excluded = '') {
+            console.log("Начало поиска слов");
             const pattern = generatePattern(known);
+            console.log("Шаблон:", pattern);
             let filteredWords = filterWordsByPattern(words, pattern);
+            console.log("После фильтра по шаблону:", filteredWords);
 
             if (unknown) {
                 filteredWords = filterWordsByInclusion(filteredWords, unknown);
+                console.log("После фильтра по включению:", filteredWords);
             }
 
             if (excluded) {
                 filteredWords = filterWordsByExclusion(filteredWords, excluded);
+                console.log("После фильтра по исключению:", filteredWords);
             }
 
-            console.log('Отфильтрованные слова:', filteredWords);
+            console.log("Отфильтрованные слова:", filteredWords);
             return filteredWords;
         }
 
@@ -83,15 +88,18 @@
         }
 
         function filterWordsByPattern(words, pattern) {
+            console.log("Фильтрация по паттерну:", pattern);
             const regex = new RegExp(`^${pattern}$`);
             return words.filter(word => regex.test(word));
         }
 
         function filterWordsByInclusion(words, unknown) {
+            console.log("Фильтрация по включению:", unknown);
             return words.filter(word => [...unknown].every(letter => word.includes(letter)));
         }
 
         function filterWordsByExclusion(words, excluded) {
+            console.log("Фильтрация по исключению:", excluded);
             return words.filter(word => [...excluded].every(letter => !word.includes(letter)));
         }
 
@@ -103,6 +111,7 @@
             } else {
                 resultsDiv.innerHTML = '<p>Подходящих слов не найдено.</p>';
             }
+            console.log("Результаты отображены:", results);
         }
     </script>
 </body>
