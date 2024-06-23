@@ -5,7 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WordleHelper</title>
+    <meta name="description" content="WordleHelper - помощник для игры в '5 слов'. Помогает находить слова по известным и неизвестным буквам.">
+
+    <!-- Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
     <style>
         .content {
             display: flex;
@@ -23,34 +27,50 @@
             padding: 1rem;
             background-color: #f7fafc;
         }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #3b82f6;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 
 <body class="bg-gray-100">
     <div class="content">
         <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
-            <h1 class="text-2xl font-bold mb-6">WordleHelper</h1>
-            <p class="mb-4">Введите известные буквы, неизвестные буквы, и исключенные буквы. Нажмите кнопку "Найти", чтобы увидеть возможные варианты слов.</p>
+            <h1 class="text-2xl font-bold mb-3">WordleHelper</h1>
+            <p class="mb-6 text-gray-700">Этот скрипт помогает находить слова в игре "5 слов" по известным и неизвестным буквам.</p>
+            <p class="mb-4">Введите известные буквы, неизвестные буквы, и исключенные буквы. Результаты будут обновляться автоматически.</p>
             <form id="wordle-form" class="space-y-4" onsubmit="return false;">
                 <div>
                     <label for="known" class="block text-sm font-medium text-gray-700">Известные буквы</label>
-                    <input type="text" id="known" class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="м_тр_">
+                    <input type="text" id="known" class="known mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="м_тр_">
                 </div>
                 <div>
                     <label for="unknown" class="block text-sm font-medium text-gray-700">Неизвестные буквы</label>
-                    <input type="text" id="unknown" class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="буквы">
+                    <input type="text" id="unknown" class="unknown mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="буквы">
                 </div>
                 <div>
-                    <label for="excluded" class="block text-sm font-medium text-gray-700">Исключенные буквы</label>
-                    <input type="text" id="excluded" class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="буквы">
+                    <label for="excluded" class="block text-sm font-medium text-gray-700">Исключенные буклы</label>
+                    <input type="text" id="excluded" class="excluded mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="буквы">
                 </div>
-                <button type="button" id="find-button" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Найти</button>
             </form>
+            <div id="loading-spinner" class="spinner mt-6 hidden mx-auto"></div>
             <div id="results" class="results-container mt-6"></div>
         </div>
     </div>
     <footer class="w-full py-2 text-center text-xs text-gray-500">
-        <p>&copy; 2023 Maksim Borzov</p>
+        <p>&copy; 2024 Maksim Borzov</p>
     </footer>
 
     <script>
@@ -65,38 +85,41 @@
         let words = [];
 
         document.addEventListener("DOMContentLoaded", () => {
+            const loadingSpinner = document.getElementById('loading-spinner');
+            loadingSpinner.classList.remove('hidden');
+
             loadWords()
                 .then(loadedWords => {
                     words = loadedWords;
                     console.log('Слова загружены:', words);
+                    loadingSpinner.classList.add('hidden');
                 })
                 .catch(error => {
                     console.error('Ошибка при загрузке словаря:', error);
                     alert('Ошибка при загрузке словаря: ' + error.message);
+                    loadingSpinner.classList.add('hidden');
                 });
 
             const knownInput = document.getElementById('known');
             const unknownInput = document.getElementById('unknown');
             const excludedInput = document.getElementById('excluded');
-            const findButton = document.getElementById('find-button');
 
-            findButton.addEventListener('click', () => {
-                console.clear();
-                const known = knownInput.value.trim();
-                const unknown = unknownInput.value.trim();
-                const excluded = excludedInput.value.trim();
+            [knownInput, unknownInput, excludedInput].forEach(input => {
+                input.addEventListener('input', () => {
+                    validateInputs();
+                    const known = knownInput.value.trim();
+                    const unknown = unknownInput.value.trim();
+                    const excluded = excludedInput.value.trim();
 
-                console.log('Известные:', known);
-                console.log('Неизвестные:', unknown);
-                console.log('Исключенные:', excluded);
-
-                const filteredWords = findWords(known, unknown, excluded);
-                displayResults(filteredWords);
+                    // Запуск поиска, если количество символов в любом поле >= 3
+                    if (known.length >= 3 || unknown.length >= 3 || excluded.length >= 3) {
+                        const filteredWords = findWords(known, unknown, excluded);
+                        displayResults(filteredWords);
+                    }
+                });
             });
 
             excludedInput.addEventListener('input', validateInputs);
-            knownInput.addEventListener('input', validateInputs);
-            unknownInput.addEventListener('input', validateInputs);
 
             function validateInputs() {
                 const excludedLetters = excludedInput.value.split('');
@@ -111,21 +134,16 @@
             }
 
             function findWords(known, unknown, excluded) {
-                console.log('Начало поиска слов');
                 const pattern = generatePattern(known || '_____');
-                console.log('Шаблон:', pattern);
 
                 let filteredWords = filterWordsByPattern(words, pattern);
-                console.log('После фильтра по шаблону:', filteredWords);
 
                 if (unknown) {
                     filteredWords = filterWordsByInclusion(filteredWords, unknown);
-                    console.log('После фильтра по включению:', filteredWords);
                 }
 
                 if (excluded) {
                     filteredWords = filterWordsByExclusion(filteredWords, excluded);
-                    console.log('После фильтра по исключению:', filteredWords);
                 }
 
                 return filteredWords;
@@ -156,7 +174,6 @@
                 } else {
                     resultsDiv.innerHTML = '<p>Подходящих слов не найдено.</p>';
                 }
-                console.log('Результаты:', results);
             }
         });
     </script>
