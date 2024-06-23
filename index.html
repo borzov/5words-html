@@ -54,105 +54,111 @@
     </footer>
 
     <script>
+        // Функция загрузки слов
+        function loadWords() {
+            return fetch('dictionary.txt')
+                .then(response => response.text())
+                .then(text => text.split('\n').map(word => word.trim().toLowerCase()).filter(word => word.length === 5));
+        }
+
+        // Инициализация
         let words = [];
-        fetch('dictionary.txt')
-            .then(response => response.text())
-            .then(text => {
-                words = text.split('\n').map(word => word.trim().toLowerCase()).filter(word => word.length === 5);
-                console.log('Слова загружены:', words);
-            })
-            .catch(error => {
-                console.error('Ошибка при загрузке словаря:', error);
-                alert('Ошибка при загрузке словаря: ' + error.message);
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadWords()
+                .then(loadedWords => {
+                    words = loadedWords;
+                    console.log('Слова загружены:', words);
+                })
+                .catch(error => {
+                    console.error('Ошибка при загрузке словаря:', error);
+                    alert('Ошибка при загрузке словаря: ' + error.message);
+                });
+
+            const knownInput = document.getElementById('known');
+            const unknownInput = document.getElementById('unknown');
+            const excludedInput = document.getElementById('excluded');
+            const findButton = document.getElementById('find-button');
+
+            findButton.addEventListener('click', () => {
+                console.clear();
+                const known = knownInput.value.trim();
+                const unknown = unknownInput.value.trim();
+                const excluded = excludedInput.value.trim();
+
+                console.log('Известные:', known);
+                console.log('Неизвестные:', unknown);
+                console.log('Исключенные:', excluded);
+
+                const filteredWords = findWords(known, unknown, excluded);
+                displayResults(filteredWords);
             });
 
-        const knownInput = document.getElementById('known');
-        const unknownInput = document.getElementById('unknown');
-        const excludedInput = document.getElementById('excluded');
-        const findButton = document.getElementById('find-button');
+            excludedInput.addEventListener('input', validateInputs);
+            knownInput.addEventListener('input', validateInputs);
+            unknownInput.addEventListener('input', validateInputs);
 
-        findButton.addEventListener('click', () => {
-            console.clear();
-            console.log('Известные:', knownInput.value);
-            console.log('Неизвестные:', unknownInput.value);
-            console.log('Исключенные:', excludedInput.value);
+            function validateInputs() {
+                const excludedLetters = excludedInput.value.split('');
 
-            const filteredWords = findWords(words, knownInput.value, unknownInput.value, excludedInput.value);
-            displayResults(filteredWords);
-        });
+                [knownInput, unknownInput].forEach(input => {
+                    const filteredValue = input.value.split('').filter(letter => !excludedLetters.includes(letter)).join('');
+                    if (input.value !== filteredValue) {
+                        input.value = filteredValue;
+                        alert('Некоторые буквы были исключены из поля, так как они указаны в исключенных.');
+                    }
+                });
+            }
 
-        excludedInput.addEventListener('input', () => {
-            validateInputs();
-        });
+            function findWords(known, unknown, excluded) {
+                console.log('Начало поиска слов');
+                const pattern = generatePattern(known);
+                console.log('Шаблон:', pattern);
 
-        knownInput.addEventListener('input', () => {
-            validateInputs();
-        });
+                let filteredWords = filterWordsByPattern(pattern);
+                console.log('После фильтра по шаблону:', filteredWords);
 
-        unknownInput.addEventListener('input', () => {
-            validateInputs();
-        });
-
-        function validateInputs() {
-            const excludedLetters = excludedInput.value.split('');
-
-            [knownInput, unknownInput].forEach(input => {
-                const filteredValue = input.value.split('').filter(letter => !excludedLetters.includes(letter)).join('');
-                if (input.value !== filteredValue) {
-                    input.value = filteredValue;
-                    alert('Некоторые буквы были исключены из поля, так как они указаны в исключенных.');
+                if (unknown) {
+                    filteredWords = filterWordsByInclusion(filteredWords, unknown);
+                    console.log('После фильтра по включению:', filteredWords);
                 }
-            });
-        }
 
-        function findWords(words, known = '', unknown = '', excluded = '') {
-            console.log('Начало поиска слов');
-            const pattern = generatePattern(known);
-            console.log('Шаблон:', pattern);
+                if (excluded) {
+                    filteredWords = filterWordsByExclusion(filteredWords, excluded);
+                    console.log('После фильтра по исключению:', filteredWords);
+                }
 
-            let filteredWords = filterWordsByPattern(words, pattern);
-            console.log('После фильтра по шаблону:', filteredWords);
-
-            if (unknown) {
-                filteredWords = filterWordsByInclusion(filteredWords, unknown);
-                console.log('После фильтра по включению:', filteredWords);
+                return filteredWords;
             }
 
-            if (excluded) {
-                filteredWords = filterWordsByExclusion(filteredWords, excluded);
-                console.log('После фильтра по исключению:', filteredWords);
+            function generatePattern(known) {
+                return known.replace(/_/g, '.');
             }
 
-            return filteredWords;
-        }
-
-        function generatePattern(known) {
-            return known.replace(/_/g, '.');
-        }
-
-        function filterWordsByPattern(words, pattern) {
-            const regex = new RegExp(`^${pattern}$`);
-            return words.filter(word => regex.test(word));
-        }
-
-        function filterWordsByInclusion(words, unknown) {
-            return words.filter(word => [...unknown].every(letter => word.includes(letter)));
-        }
-
-        function filterWordsByExclusion(words, excluded) {
-            return words.filter(word => [...excluded].every(letter => !word.includes(letter)));
-        }
-
-        function displayResults(results) {
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '';
-            if (results.length) {
-                resultsDiv.innerHTML = `<p>Подходящие слова:</p><ul class="list-disc pl-5">${results.map(word => `<li>${word}</li>`).join('')}</ul>`;
-            } else {
-                resultsDiv.innerHTML = '<p>Подходящих слов не найдено.</p>';
+            function filterWordsByPattern(pattern) {
+                const regex = new RegExp(`^${pattern}$`);
+                return words.filter(word => regex.test(word));
             }
-            console.log('Результаты:', results);
-        }
+
+            function filterWordsByInclusion(words, unknown) {
+                return words.filter(word => [...unknown].every(letter => word.includes(letter)));
+            }
+
+            function filterWordsByExclusion(words, excluded) {
+                return words.filter(word => [...excluded].every(letter => !word.includes(letter)));
+            }
+
+            function displayResults(results) {
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = '';
+                if (results.length) {
+                    resultsDiv.innerHTML = `<p>Подходящие слова:</p><ul class="list-disc pl-5">${results.map(word => `<li>${word}</li>`).join('')}</ul>`;
+                } else {
+                    resultsDiv.innerHTML = '<p>Подходящих слов не найдено.</p>';
+                }
+                console.log('Результаты:', results);
+            }
+        });
     </script>
 </body>
 
