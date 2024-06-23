@@ -5,7 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WordleHelper</title>
-    <meta name="description" content="WordleHelper - помощник для игры в '5 слов'. Помогает находить слова по известным и неизвестным буквам.">
+    <meta name="description" content="WordleHelper - помощник для игры в '5 слов'. Помогает находить слова по известным и неизвестным буквам, облегчая игру.">
+    <meta name="keywords" content="Wordle, WordleHelper, 5 слов, игра в слова, помощь в игре">
+    <meta name="author" content="Maksim Borzov">
+    <meta name="robots" content="index, follow">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
 
     <!-- Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -17,6 +21,7 @@
             min-height: 100vh;
             justify-content: center;
             align-items: center;
+            padding: 1rem;
         }
 
         .results-container {
@@ -47,25 +52,26 @@
 
 <body class="bg-gray-100">
     <div class="content">
-        <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
+        <div class="bg-white p-8 rounded shadow-md w-full max-w-lg">
             <h1 class="text-2xl font-bold mb-3">WordleHelper</h1>
             <p class="mb-6 text-gray-700">Этот скрипт помогает находить слова в игре "5 слов" по известным и неизвестным буквам.</p>
             <p class="mb-4">Введите известные буквы, неизвестные буквы, и исключенные буквы. Результаты будут обновляться автоматически.</p>
             <form id="wordle-form" class="space-y-4" onsubmit="return false;">
                 <div>
                     <label for="known" class="block text-sm font-medium text-gray-700">Известные буквы</label>
-                    <input type="text" id="known" class="known mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="м_тр_">
+                    <input type="text" id="known" class="known mt-1 p-3 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-lg" placeholder="м_тр_">
                 </div>
                 <div>
                     <label for="unknown" class="block text-sm font-medium text-gray-700">Неизвестные буквы</label>
-                    <input type="text" id="unknown" class="unknown mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="буквы">
+                    <input type="text" id="unknown" class="unknown mt-1 p-3 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-lg" placeholder="буквы">
                 </div>
                 <div>
-                    <label for="excluded" class="block text-sm font-medium text-gray-700">Исключенные буклы</label>
-                    <input type="text" id="excluded" class="excluded mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="буквы">
+                    <label for="excluded" class="block text-sm font-medium text-gray-700">Исключенные буквы</label>
+                    <input type="text" id="excluded" class="excluded mt-1 p-3 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-lg" placeholder="буквы">
                 </div>
             </form>
             <div id="loading-spinner" class="spinner mt-6 hidden mx-auto"></div>
+            <div id="results-count" class="mt-4 text-center text-gray-600"></div>
             <div id="results" class="results-container mt-6"></div>
         </div>
     </div>
@@ -91,7 +97,6 @@
             loadWords()
                 .then(loadedWords => {
                     words = loadedWords;
-                    console.log('Слова загружены:', words);
                     loadingSpinner.classList.add('hidden');
                 })
                 .catch(error => {
@@ -168,11 +173,14 @@
 
             function displayResults(results) {
                 const resultsDiv = document.getElementById('results');
+                const resultsCountDiv = document.getElementById('results-count');
                 resultsDiv.innerHTML = '';
                 if (results.length) {
                     resultsDiv.innerHTML = `<p>Подходящие слова:</p><ul class="list-disc pl-5">${results.map(word => `<li>${word}</li>`).join('')}</ul>`;
+                    resultsCountDiv.textContent = `Найдено подходящих слов: ${results.length}`;
                 } else {
                     resultsDiv.innerHTML = '<p>Подходящих слов не найдено.</p>';
+                    resultsCountDiv.textContent = '';
                 }
             }
         });
