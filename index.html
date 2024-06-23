@@ -30,27 +30,21 @@
     <div class="content">
         <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
             <h1 class="text-2xl font-bold mb-6">WordleHelper</h1>
-            <p class="mb-4">Введите известные буквы, неизвестные буквы, и исключенные буквы. Результаты будут обновляться
-                автоматически, если в одном из полей введено 3 символа или больше.</p>
-            <form id="wordle-form" class="space-y-4">
+            <p class="mb-4">Введите известные буквы, неизвестные буквы, и исключенные буквы. Нажмите кнопку "Найти", чтобы увидеть возможные варианты слов.</p>
+            <form id="wordle-form" class="space-y-4" onsubmit="return false;">
                 <div>
                     <label for="known" class="block text-sm font-medium text-gray-700">Известные буквы</label>
-                    <input type="text" id="known"
-                        class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        placeholder="м_тр_">
+                    <input type="text" id="known" class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="м_тр_">
                 </div>
                 <div>
                     <label for="unknown" class="block text-sm font-medium text-gray-700">Неизвестные буквы</label>
-                    <input type="text" id="unknown"
-                        class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        placeholder="буквы">
+                    <input type="text" id="unknown" class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="буквы">
                 </div>
                 <div>
                     <label for="excluded" class="block text-sm font-medium text-gray-700">Исключенные буквы</label>
-                    <input type="text" id="excluded"
-                        class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        placeholder="буквы">
+                    <input type="text" id="excluded" class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="буквы">
                 </div>
+                <button type="button" id="find-button" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Найти</button>
             </form>
             <div id="results" class="results-container mt-6"></div>
         </div>
@@ -64,9 +58,8 @@
         fetch('dictionary.txt')
             .then(response => response.text())
             .then(text => {
-                words = text.split('\n')
-                    .map(word => word.trim().toLowerCase())
-                    .filter(word => word.length === 5);
+                words = text.split('\n').map(word => word.trim().toLowerCase()).filter(word => word.length === 5);
+                console.log('Слова загружены:', words);
             })
             .catch(error => {
                 console.error('Ошибка при загрузке словаря:', error);
@@ -76,26 +69,58 @@
         const knownInput = document.getElementById('known');
         const unknownInput = document.getElementById('unknown');
         const excludedInput = document.getElementById('excluded');
+        const findButton = document.getElementById('find-button');
 
-        [knownInput, unknownInput, excludedInput].forEach(input => {
-            input.addEventListener('input', () => {
-                if (knownInput.value.length >= 3 || unknownInput.value.length >= 3 || excludedInput.value.length >= 3) {
-                    const filteredWords = findWords(words, knownInput.value, unknownInput.value, excludedInput.value);
-                    displayResults(filteredWords);
-                }
-            });
+        findButton.addEventListener('click', () => {
+            console.clear();
+            console.log('Известные:', knownInput.value);
+            console.log('Неизвестные:', unknownInput.value);
+            console.log('Исключенные:', excludedInput.value);
+
+            const filteredWords = findWords(words, knownInput.value, unknownInput.value, excludedInput.value);
+            displayResults(filteredWords);
         });
 
+        excludedInput.addEventListener('input', () => {
+            validateInputs();
+        });
+
+        knownInput.addEventListener('input', () => {
+            validateInputs();
+        });
+
+        unknownInput.addEventListener('input', () => {
+            validateInputs();
+        });
+
+        function validateInputs() {
+            const excludedLetters = excludedInput.value.split('');
+
+            [knownInput, unknownInput].forEach(input => {
+                const filteredValue = input.value.split('').filter(letter => !excludedLetters.includes(letter)).join('');
+                if (input.value !== filteredValue) {
+                    input.value = filteredValue;
+                    alert('Некоторые буквы были исключены из поля, так как они указаны в исключенных.');
+                }
+            });
+        }
+
         function findWords(words, known = '', unknown = '', excluded = '') {
+            console.log('Начало поиска слов');
             const pattern = generatePattern(known);
+            console.log('Шаблон:', pattern);
+
             let filteredWords = filterWordsByPattern(words, pattern);
+            console.log('После фильтра по шаблону:', filteredWords);
 
             if (unknown) {
                 filteredWords = filterWordsByInclusion(filteredWords, unknown);
+                console.log('После фильтра по включению:', filteredWords);
             }
 
             if (excluded) {
                 filteredWords = filterWordsByExclusion(filteredWords, excluded);
+                console.log('После фильтра по исключению:', filteredWords);
             }
 
             return filteredWords;
@@ -126,6 +151,7 @@
             } else {
                 resultsDiv.innerHTML = '<p>Подходящих слов не найдено.</p>';
             }
+            console.log('Результаты:', results);
         }
     </script>
 </body>
