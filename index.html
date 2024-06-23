@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +14,7 @@
             justify-content: center;
             align-items: center;
         }
+
         .results-container {
             max-height: 300px;
             overflow-y: auto;
@@ -23,23 +25,31 @@
         }
     </style>
 </head>
+
 <body class="bg-gray-100">
     <div class="content">
         <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
             <h1 class="text-2xl font-bold mb-6">WordleHelper</h1>
-            <p class="mb-4">Введите известные буклы, неизвестные буквы, и исключенные буквы. Результаты будут обновляться автоматически, если в одном из полей введено больше 3 символов.</p>
+            <p class="mb-4">Введите известные буквы, неизвестные буквы, и исключенные буквы. Результаты будут обновляться
+                автоматически, если в одном из полей введено 3 символа или больше.</p>
             <form id="wordle-form" class="space-y-4">
                 <div>
                     <label for="known" class="block text-sm font-medium text-gray-700">Известные буквы</label>
-                    <input type="text" id="known" class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="м_тр_">
+                    <input type="text" id="known"
+                        class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        placeholder="м_тр_">
                 </div>
                 <div>
                     <label for="unknown" class="block text-sm font-medium text-gray-700">Неизвестные буквы</label>
-                    <input type="text" id="unknown" class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="буквы">
+                    <input type="text" id="unknown"
+                        class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        placeholder="буквы">
                 </div>
                 <div>
                     <label for="excluded" class="block text-sm font-medium text-gray-700">Исключенные буквы</label>
-                    <input type="text" id="excluded" class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="буквы">
+                    <input type="text" id="excluded"
+                        class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        placeholder="буквы">
                 </div>
             </form>
             <div id="results" class="results-container mt-6"></div>
@@ -54,7 +64,9 @@
         fetch('dictionary.txt')
             .then(response => response.text())
             .then(text => {
-                words = text.split('\n').map(word => word.trim().toLowerCase()).filter(word => word.length === 5);
+                words = text.split('\n')
+                    .map(word => word.trim().toLowerCase())
+                    .filter(word => word.length === 5);
             })
             .catch(error => {
                 console.error('Ошибка при загрузке словаря:', error);
@@ -67,7 +79,7 @@
 
         [knownInput, unknownInput, excludedInput].forEach(input => {
             input.addEventListener('input', () => {
-                if (knownInput.value.length > 3 || unknownInput.value.length > 3 || excludedInput.value.length > 3) {
+                if (knownInput.value.length >= 3 || unknownInput.value.length >= 3 || excludedInput.value.length >= 3) {
                     const filteredWords = findWords(words, knownInput.value, unknownInput.value, excludedInput.value);
                     displayResults(filteredWords);
                 }
@@ -117,4 +129,5 @@
         }
     </script>
 </body>
+
 </html>
